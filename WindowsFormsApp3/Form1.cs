@@ -65,14 +65,14 @@ namespace MatrixInverseCalculator
                 {
                     for (int j = 0; j < 3; j++)
                     {
-                        matrixA[i, j] = double.Parse(matrixATextBoxes[i, j].Text);
+                        matrixA[i, j] = ParseInputToDouble(matrixATextBoxes[i, j].Text);
                     }
-                    matrixB[i] = double.Parse(matrixBTextBoxes[i].Text);
+                    matrixB[i] = ParseInputToDouble(matrixBTextBoxes[i].Text);
                 }
             }
-            catch (FormatException)
+            catch (FormatException ex)
             {
-                SetRemark("Error: Please enter valid numbers in all fields.", true);
+                SetRemark($"Error: {ex.Message}. Please enter valid numbers or fractions (e.g., 1/3).", true);
                 return;
             }
 
@@ -98,6 +98,48 @@ namespace MatrixInverseCalculator
 
             // Clear remarks if successful
             SetRemark("Remarks: Solution found.", false);
+        }
+
+        /// <summary>
+        /// Parses a string that is either a decimal or a fraction (e.g., "1/3") into a double.
+        /// </summary>
+        private double ParseInputToDouble(string input)
+        {
+            input = input.Trim();
+            try
+            {
+                // Try parsing directly as a double first
+                return double.Parse(input);
+            }
+            catch (FormatException)
+            {
+                // If it fails, check for a fraction
+                if (input.Contains("/"))
+                {
+                    string[] parts = input.Split('/');
+                    if (parts.Length == 2)
+                    {
+                        try
+                        {
+                            double numerator = double.Parse(parts[0].Trim());
+                            double denominator = double.Parse(parts[1].Trim());
+
+                            if (Math.Abs(denominator) < 1e-10) // Check for division by zero
+                            {
+                                throw new FormatException("Division by zero in fraction");
+                            }
+                            return numerator / denominator;
+                        }
+                        catch (FormatException)
+                        {
+                            // Re-throw if parsing numerator/denominator fails
+                            throw new FormatException("Invalid fraction format");
+                        }
+                    }
+                }
+                // If it's not a double and not a valid fraction, throw
+                throw new FormatException("Invalid input format");
+            }
         }
 
         /// <summary>
